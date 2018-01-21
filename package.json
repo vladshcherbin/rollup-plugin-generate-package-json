@@ -2,14 +2,21 @@
   "name": "rollup-plugin-generate-package-json",
   "description": "Generate package.json file",
   "version": "0.1.0",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "test": "jest"
   },
   "devDependencies": {
     "eslint": "^4.16.0",
     "eslint-config-airbnb-base": "^12.1.0",
-    "eslint-plugin-import": "^2.8.0"
+    "eslint-plugin-import": "^2.8.0",
+    "jest": "^22.1.4",
+    "jest-plugin-fs": "^2.6.0",
+    "memfs": "^2.6.2"
+  },
+  "jest": {
+    "roots": ["<rootDir>/tests"]
   },
   "license": "MIT"
 }
