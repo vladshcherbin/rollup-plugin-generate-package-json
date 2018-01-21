@@ -1,0 +1,7 @@
+{
+  "name": "rollup-plugin-generate-package-json",
+  "version": "0.1.0",
+  "description": "Generate package.json file",
+  "main": "index.js",
+  "license": "MIT"
+}
