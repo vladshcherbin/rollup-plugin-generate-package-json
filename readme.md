@@ -1,6 +1,7 @@
 # rollup-plugin-generate-package-json
 
 [![Build Status](https://travis-ci.org/VladShcherbin/rollup-plugin-generate-package-json.svg?branch=master)](https://travis-ci.org/VladShcherbin/rollup-plugin-generate-package-json)
+[![Codecov](https://img.shields.io/codecov/c/github/VladShcherbin/rollup-plugin-generate-package-json.svg)](https://codecov.io/gh/VladShcherbin/rollup-plugin-generate-package-json)
 
 Generate `package.json` file with packages from your bundle using Rollup.
 
