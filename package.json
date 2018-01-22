@@ -4,19 +4,24 @@
   "version": "0.1.0",
   "main": "src/index.js",
   "scripts": {
-    "lint": "eslint src",
-    "test": "jest"
+    "lint": "eslint src tests",
+    "test": "jest",
+    "coverage": "yarn test --coverage && yarn codecov && yarn rimraf coverage",
+    "prepublishOnly": "yarn lint && yarn test"
   },
   "devDependencies": {
+    "codecov": "^3.0.0",
     "eslint": "^4.16.0",
     "eslint-config-airbnb-base": "^12.1.0",
     "eslint-plugin-import": "^2.8.0",
     "jest": "^22.1.4",
-    "jest-plugin-fs": "^2.6.0",
-    "memfs": "^2.6.2"
+    "memfs": "^2.6.2",
+    "rimraf": "^2.6.2"
   },
   "jest": {
-    "roots": ["<rootDir>/tests"]
+    "roots": [
+      "<rootDir>/tests"
+    ]
   },
   "license": "MIT"
 }
