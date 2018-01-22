@@ -41,7 +41,7 @@ describe('Input package.json file', () => {
     vol.mkdirpSync('/dist')
   })
 
-  it('throw when "inputFile" is not set and file doesn\'t exist', () => {
+  test('throw when "inputFile" is not set and file doesn\'t exist', () => {
     vol.fromJSON({})
 
     expect(() => {
@@ -51,7 +51,7 @@ describe('Input package.json file', () => {
     }).toThrow(packageJsonErrorMessage)
   })
 
-  it('don\'t throw when "inputFile" is not set and file exists', () => {
+  test('don\'t throw when "inputFile" is not set and file exists', () => {
     vol.fromJSON({ '/package.json': emptyPackageJson })
 
     expect(() => {
@@ -61,7 +61,7 @@ describe('Input package.json file', () => {
     }).not.toThrow()
   })
 
-  it('throw when "inputFile" is set and file doesn\'t exist', () => {
+  test('throw when "inputFile" is set and file doesn\'t exist', () => {
     vol.fromJSON({})
 
     expect(() => {
@@ -72,7 +72,7 @@ describe('Input package.json file', () => {
     }).toThrow(packageJsonErrorMessage)
   })
 
-  it('don\'t throw when "inputFile" is set and file exists', () => {
+  test('don\'t throw when "inputFile" is set and file exists', () => {
     vol.fromJSON({ '/src/package.json': emptyPackageJson })
 
     expect(() => {
@@ -83,7 +83,7 @@ describe('Input package.json file', () => {
     }).not.toThrow()
   })
 
-  it('throw when "inputFile" is not set and file exists, but has wrong format', () => {
+  test('throw when "inputFile" is not set and file exists, but has wrong format', () => {
     vol.fromJSON({ '/package.json': 'hey' })
 
     expect(() => {
@@ -93,7 +93,7 @@ describe('Input package.json file', () => {
     }).toThrow(packageJsonWrongFormatErrorMessage)
   })
 
-  it('throw when "inputFile" is set and file exists, but has wrong format', () => {
+  test('throw when "inputFile" is set and file exists, but has wrong format', () => {
     vol.fromJSON({ '/src/package.json': 'hey' })
 
     expect(() => {
