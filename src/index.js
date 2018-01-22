@@ -35,7 +35,7 @@ module.exports = (options = {}) => {
     name: 'generate-package-json',
     ongenerate: ({ bundle }) => {
       const inputPackageJson = parseInputPackageJsonFile(inputPackageJsonPath)
-      const baseContents = options.base || {}
+      const baseContents = options.baseContents || {}
       const bundledDependencies = {}
 
       bundle.imports.forEach((importedModule) => {

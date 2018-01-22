@@ -213,8 +213,8 @@ describe('Generate package.json', () => {
       vol.fromJSON({ '/package.json': emptyPackageJson })
 
       generatePackageJson({
-        base: basePackageJson,
-        outputFolder: '/dist'
+        outputFolder: '/dist',
+        baseContents: basePackageJson
       }).ongenerate(bundleDetailsWithImports)
 
       expect(vol.toJSON()['/dist/package.json']).toBe(stringify(basePackageJson))
@@ -224,8 +224,8 @@ describe('Generate package.json', () => {
       vol.fromJSON({ '/package.json': emptyPackageJson })
 
       generatePackageJson({
-        base: basePackageJson,
-        outputFolder: '/dist'
+        outputFolder: '/dist',
+        baseContents: basePackageJson
       }).ongenerate(bundleDetailsNoImports)
 
       expect(vol.toJSON()['/dist/package.json']).toBe(stringify(basePackageJson))
@@ -235,8 +235,8 @@ describe('Generate package.json', () => {
       vol.fromJSON({ '/package.json': nonEmptyPackageJson })
 
       generatePackageJson({
-        base: basePackageJson,
-        outputFolder: '/dist'
+        outputFolder: '/dist',
+        baseContents: basePackageJson
       }).ongenerate(bundleDetailsNoImports)
 
       expect(vol.toJSON()['/dist/package.json']).toBe(stringify(basePackageJson))
@@ -246,8 +246,8 @@ describe('Generate package.json', () => {
       vol.fromJSON({ '/package.json': emptyPackageJson })
 
       generatePackageJson({
-        base: basePackageJson,
-        outputFolder: '/dist'
+        outputFolder: '/dist',
+        baseContents: basePackageJson
       }).ongenerate(bundleDetailsWithImports)
 
       expect(vol.toJSON()['/dist/package.json']).toBe(stringify(basePackageJson))
@@ -257,8 +257,8 @@ describe('Generate package.json', () => {
       vol.fromJSON({ '/package.json': nonEmptyPackageJson })
 
       generatePackageJson({
-        base: basePackageJson,
-        outputFolder: '/dist'
+        outputFolder: '/dist',
+        baseContents: basePackageJson
       }).ongenerate(bundleDetailsWithImports)
 
       const expectedPackageJson = stringify(Object.assign({}, basePackageJson, {
