@@ -1,7 +1,9 @@
 {
   "name": "rollup-plugin-generate-package-json",
-  "description": "Generate package.json file",
+  "description": "Generate package.json file with packages from your bundle using Rollup",
   "version": "0.1.0",
+  "author": "Vlad Shcherbin <vlad.shcherbin@gmail.com>",
+  "repository": "VladShcherbin/rollup-plugin-generate-package-json",
   "main": "src/index.js",
   "scripts": {
     "lint": "eslint src tests",
@@ -18,6 +20,16 @@
     "memfs": "^2.6.2",
     "rimraf": "^2.6.2"
   },
+  "files": [
+    "src",
+    "readme.md"
+  ],
+  "keywords": [
+    "rollup",
+    "plugin",
+    "generate",
+    "package.json"
+  ],
   "jest": {
     "roots": [
       "<rootDir>/tests"
