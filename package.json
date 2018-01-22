@@ -1,7 +1,7 @@
 {
   "name": "rollup-plugin-generate-package-json",
   "description": "Generate package.json file with packages from your bundle using Rollup",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "author": "Vlad Shcherbin <vlad.shcherbin@gmail.com>",
   "repository": "VladShcherbin/rollup-plugin-generate-package-json",
   "main": "src/index.js",
