@@ -1,58 +1,54 @@
-const path = require('path')
-const fs = require('fs')
+import { dirname } from 'path'
+import readPkg from 'read-pkg'
+import writePkg from 'write-pkg'
 
-function checkInputPackageJsonFile(inputFilePath) {
-  if (!fs.existsSync(inputFilePath)) {
-    throw new Error('Package.json file can\'t be found, check "inputFile" option')
-  }
-}
-
-function checkOutputFolder(outputFolderPath) {
-  if (!outputFolderPath || !fs.existsSync(path.resolve(outputFolderPath))) {
-    throw Error('Output folder was not set or can\'t be found, check "outputFolder" option')
-  }
-}
-
-function parseInputPackageJsonFile(inputFilePath) {
+function readPackageJson(path) {
   try {
-    return JSON.parse(fs.readFileSync(inputFilePath))
+    return readPkg.sync(path, { normalize: false })
   } catch (e) {
-    throw new Error('Package.json file has wrong format')
+    throw new Error('Input package.json file does not exist or has bad format, check "inputPackageJson" option')
   }
 }
 
-function formatPackageJson(generatedContents) {
-  return JSON.stringify(generatedContents, null, 2)
+function writePackageJson(path, contents) {
+  try {
+    return writePkg.sync(path, contents)
+  } catch (e) {
+    throw new Error('Unable to save generated package.json file, check "outputFolder" option')
+  }
 }
 
-module.exports = (options = {}) => {
-  const inputPackageJsonPath = path.resolve(options.inputFile || 'package.json')
-
-  checkInputPackageJsonFile(inputPackageJsonPath)
-  checkOutputFolder(options.outputFolder)
+export default function (options = {}) {
+  const inputPackageJson = readPackageJson(options.inputPackageJson)
+  const baseContents = options.baseContents || {}
+  const additionalDependencies = options.additionalDependencies || []
+  let dependencies = []
 
   return {
     name: 'generate-package-json',
     ongenerate: ({ bundle }) => {
-      const inputPackageJson = parseInputPackageJsonFile(inputPackageJsonPath)
-      const baseContents = options.baseContents || {}
-      const bundledDependencies = {}
+      dependencies = [...bundle.imports, ...additionalDependencies].sort()
+    },
+    onwrite: (details) => {
+      const outputPackageJson = options.outputFolder || dirname(details.file)
+      const inputPackageJsonDependencies = inputPackageJson.dependencies
+      const generatedDependencies = {}
 
-      bundle.imports.forEach((importedModule) => {
-        if (inputPackageJson.dependencies && inputPackageJson.dependencies[importedModule]) {
-          bundledDependencies[importedModule] = inputPackageJson.dependencies[importedModule]
+      dependencies.forEach((dependency) => {
+        if (inputPackageJsonDependencies && inputPackageJsonDependencies[dependency]) {
+          generatedDependencies[dependency] = inputPackageJsonDependencies[dependency]
         }
       })
 
-      const outputPackageJson = Object.assign(
+      const generatedJson = Object.assign(
         {},
         baseContents,
-        Object.keys(bundledDependencies).length && {
-          dependencies: bundledDependencies
+        Object.keys(generatedDependencies).length && {
+          dependencies: generatedDependencies
         }
       )
 
-      fs.writeFileSync(`${options.outputFolder}/package.json`, formatPackageJson(outputPackageJson))
+      writePackageJson(outputPackageJson, generatedJson)
     }
   }
 }
