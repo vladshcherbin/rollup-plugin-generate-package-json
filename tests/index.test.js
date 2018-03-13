@@ -1,273 +1,220 @@
-jest.mock('fs')
-
-const { vol } = require('memfs')
-const generatePackageJson = require('../src')
-
-afterEach(() => {
-  vol.reset()
-})
-
-function stringify(contents) {
-  return JSON.stringify(contents, null, 2)
-}
-
-const packageJsonErrorMessage = 'Package.json file can\'t be found, check "inputFile" option'
-const packageJsonWrongFormatErrorMessage = 'Package.json file has wrong format'
-const outputFolderErrorMessage = 'Output folder was not set or can\'t be found, check "outputFolder" option'
-
-const emptyPackageJson = stringify({})
-const nonEmptyPackageJson = stringify({
-  version: '1.0',
-  dependencies: {
-    koa: '2.0',
-    react: '16.0'
-  }
-})
-const basePackageJson = {
-  name: 'my-package',
-  dependencies: {},
-  private: true
-}
+import rimraf from 'rimraf'
+import readPkg from 'read-pkg'
+import generatePackageJson from '../src'
 
 const bundleDetailsNoImports = {
   bundle: { imports: [] }
 }
+
 const bundleDetailsWithImports = {
   bundle: { imports: ['koa', 'koa-router'] }
 }
 
 describe('Input package.json file', () => {
-  beforeEach(() => {
-    vol.mkdirpSync('/dist')
+  test('throw if packageJsonPath file does not exist', () => {
+    expect(() => {
+      generatePackageJson({ inputPackageJson: 'tests/fixtures/fake-package.json' })
+    }).toThrow('Input package.json file does not exist or has bad format, check "inputPackageJson" option')
   })
 
-  test('throw when "inputFile" is not set and file doesn\'t exist', () => {
-    vol.fromJSON({})
-
+  test('throw if packageJsonPath file has bad format', () => {
     expect(() => {
-      generatePackageJson({
-        outputFolder: '/dist'
-      })
-    }).toThrow(packageJsonErrorMessage)
+      generatePackageJson({ inputPackageJson: 'tests/fixtures/bad-package.json' })
+    }).toThrow('Input package.json file does not exist or has bad format, check "inputPackageJson" option')
   })
 
-  test('don\'t throw when "inputFile" is not set and file exists', () => {
-    vol.fromJSON({ '/package.json': emptyPackageJson })
-
+  test('don\'t throw if packageJsonPath file exists and has normal format', () => {
     expect(() => {
-      generatePackageJson({
-        outputFolder: '/dist'
-      })
+      generatePackageJson({ inputPackageJson: 'tests/fixtures/empty-package.json' })
     }).not.toThrow()
   })
 
-  test('throw when "inputFile" is set and file doesn\'t exist', () => {
-    vol.fromJSON({})
-
+  test('don\'t throw if packageJsonPath directory has file', () => {
     expect(() => {
-      generatePackageJson({
-        inputFile: '/src/package.json',
-        outputFolder: '/dist'
-      })
-    }).toThrow(packageJsonErrorMessage)
-  })
-
-  test('don\'t throw when "inputFile" is set and file exists', () => {
-    vol.fromJSON({ '/src/package.json': emptyPackageJson })
-
-    expect(() => {
-      generatePackageJson({
-        inputFile: '/src/package.json',
-        outputFolder: '/dist'
-      })
-    }).not.toThrow()
-  })
-
-  test('throw when "inputFile" is not set and file exists, but has wrong format', () => {
-    vol.fromJSON({ '/package.json': 'hey' })
-
-    expect(() => {
-      generatePackageJson({
-        outputFolder: '/dist'
-      }).ongenerate(bundleDetailsWithImports)
-    }).toThrow(packageJsonWrongFormatErrorMessage)
-  })
-
-  test('throw when "inputFile" is set and file exists, but has wrong format', () => {
-    vol.fromJSON({ '/src/package.json': 'hey' })
-
-    expect(() => {
-      generatePackageJson({
-        inputFile: '/src/package.json',
-        outputFolder: '/dist'
-      }).ongenerate(bundleDetailsWithImports)
-    }).toThrow(packageJsonWrongFormatErrorMessage)
-  })
-})
-
-describe('Output folder', () => {
-  beforeEach(() => {
-    vol.fromJSON({ '/package.json': emptyPackageJson })
-  })
-
-  test('throw when "outputFolder" is not set', () => {
-    expect(() => {
-      generatePackageJson()
-    }).toThrow(outputFolderErrorMessage)
-  })
-
-  test('throw when "outputFolder" is set and folder doesn\'t exist', () => {
-    vol.mkdirpSync('/dist')
-
-    expect(() => {
-      generatePackageJson({
-        outputFolder: '/build'
-      })
-    }).toThrow(outputFolderErrorMessage)
-  })
-
-  test('don\'t throw when "outputFolder" is set and folder exists', () => {
-    vol.mkdirpSync('/dist')
-
-    expect(() => {
-      generatePackageJson({
-        outputFolder: '/dist'
-      })
+      generatePackageJson({ inputPackageJson: 'tests/fixtures' })
     }).not.toThrow()
   })
 })
 
-describe('Generate package.json', () => {
+describe('Generate package.json file', () => {
   beforeEach(() => {
-    vol.mkdirpSync('/dist')
+    rimraf.sync('tests/fixtures/output')
   })
 
-  test('overwrite existing package.json file', () => {
-    vol.fromJSON({ '/package.json': stringify({ name: 'my-package' }) })
+  test('throw if it is not possible to save generated file', () => {
+    expect(() => {
+      const generate = generatePackageJson({
+        outputFolder: 'tests/fixtures/non-writable'
+      })
 
-    generatePackageJson({
-      outputFolder: '/'
-    }).ongenerate(bundleDetailsWithImports)
-
-    expect(vol.toJSON()['/package.json']).toBe(emptyPackageJson)
+      generate.ongenerate(bundleDetailsNoImports)
+      generate.onwrite()
+    }).toThrow('Unable to save generated package.json file, check "outputFolder" option')
   })
 
-  test('generate file with no modules when bundle has no modules, input package.json hasn\'t modules', () => {
-    vol.fromJSON({ '/package.json': emptyPackageJson })
+  test('generate file when bundle and input package.json have no dependencies', () => {
+    const generate = generatePackageJson({
+      outputFolder: 'tests/fixtures/output'
+    })
 
-    generatePackageJson({
-      outputFolder: '/dist'
-    }).ongenerate(bundleDetailsNoImports)
+    generate.ongenerate(bundleDetailsNoImports)
+    generate.onwrite()
 
-    expect(vol.toJSON()['/dist/package.json']).toBe(emptyPackageJson)
+    expect(readPkg.sync('tests/fixtures/output/package.json', { normalize: false })).toEqual({})
   })
 
-  test('generate file with no modules when bundle has no modules, input package.json has modules', () => {
-    vol.fromJSON({ '/package.json': nonEmptyPackageJson })
+  test('generate file when bundle has no dependencies, input package.json has dependencies', () => {
+    const generate = generatePackageJson({
+      inputPackageJson: 'tests/fixtures/package.json',
+      outputFolder: 'tests/fixtures/output'
+    })
 
-    generatePackageJson({
-      outputFolder: '/dist'
-    }).ongenerate(bundleDetailsNoImports)
+    generate.ongenerate(bundleDetailsNoImports)
+    generate.onwrite()
 
-    expect(vol.toJSON()['/dist/package.json']).toBe(emptyPackageJson)
+    expect(readPkg.sync('tests/fixtures/output/package.json', { normalize: false })).toEqual({})
   })
 
-  test('generate file with no modules when bundle has modules, input package.json hasn\'t modules', () => {
-    vol.fromJSON({ '/package.json': emptyPackageJson })
+  test('generate file when bundle has dependencies, input package.json has no dependencies', () => {
+    const generate = generatePackageJson({
+      inputPackageJson: 'tests/fixtures/empty-package.json',
+      outputFolder: 'tests/fixtures/output'
+    })
 
-    generatePackageJson({
-      outputFolder: '/dist'
-    }).ongenerate(bundleDetailsWithImports)
+    generate.ongenerate(bundleDetailsWithImports)
+    generate.onwrite()
 
-    expect(vol.toJSON()['/dist/package.json']).toBe(emptyPackageJson)
+    expect(readPkg.sync('tests/fixtures/output/package.json', { normalize: false })).toEqual({})
   })
 
-  test('generate file with modules when bundle has modules, input package.json has modules', () => {
-    vol.fromJSON({ '/package.json': nonEmptyPackageJson })
+  test('generate file when bundle and input package.json have dependencies', () => {
+    const generate = generatePackageJson({
+      inputPackageJson: 'tests/fixtures/package.json',
+      outputFolder: 'tests/fixtures/output'
+    })
 
-    generatePackageJson({
-      outputFolder: '/dist'
-    }).ongenerate(bundleDetailsWithImports)
+    generate.ongenerate(bundleDetailsWithImports)
+    generate.onwrite()
 
-    const expectedPackageJson = stringify({
+    expect(readPkg.sync('tests/fixtures/output/package.json', { normalize: false })).toEqual({
       dependencies: {
         koa: '2.0'
       }
     })
-
-    expect(vol.toJSON()['/dist/package.json']).toBe(expectedPackageJson)
   })
 
-  test('generate file when "base" is not set', () => {
-    vol.fromJSON({ '/package.json': emptyPackageJson })
+  test('generate file with base contents', () => {
+    const basePackageJson = {
+      name: 'my-package',
+      dependencies: {},
+      private: true
+    }
+    const generate = generatePackageJson({
+      inputPackageJson: 'tests/fixtures/empty-package.json',
+      outputFolder: 'tests/fixtures/output',
+      baseContents: basePackageJson
+    })
 
-    generatePackageJson({
-      outputFolder: '/dist'
-    }).ongenerate(bundleDetailsWithImports)
+    generate.ongenerate(bundleDetailsWithImports)
+    generate.onwrite()
 
-    expect(vol.toJSON()['/dist/package.json']).toBe(emptyPackageJson)
+    expect(readPkg.sync('tests/fixtures/output/package.json', { normalize: false })).toEqual({
+      name: 'my-package',
+      private: true
+    })
   })
 
-  describe('"base" is set', () => {
-    test('generate file with base contents', () => {
-      vol.fromJSON({ '/package.json': emptyPackageJson })
-
-      generatePackageJson({
-        outputFolder: '/dist',
-        baseContents: basePackageJson
-      }).ongenerate(bundleDetailsWithImports)
-
-      expect(vol.toJSON()['/dist/package.json']).toBe(stringify(basePackageJson))
+  test('generate file with base contents and dependencies', () => {
+    const basePackageJson = {
+      name: 'my-package',
+      dependencies: {},
+      private: true
+    }
+    const generate = generatePackageJson({
+      inputPackageJson: 'tests/fixtures/package.json',
+      outputFolder: 'tests/fixtures/output',
+      baseContents: basePackageJson
     })
 
-    test('generate file with base contents, no modules when bundle has no modules, input package.json hasn\'t modules', () => {
-      vol.fromJSON({ '/package.json': emptyPackageJson })
+    generate.ongenerate(bundleDetailsWithImports)
+    generate.onwrite()
 
-      generatePackageJson({
-        outputFolder: '/dist',
-        baseContents: basePackageJson
-      }).ongenerate(bundleDetailsNoImports)
+    expect(readPkg.sync('tests/fixtures/output/package.json', { normalize: false })).toEqual({
+      name: 'my-package',
+      dependencies: {
+        koa: '2.0'
+      },
+      private: true
+    })
+  })
 
-      expect(vol.toJSON()['/dist/package.json']).toBe(stringify(basePackageJson))
+  test('generate file with additional dependencies', () => {
+    const generate = generatePackageJson({
+      inputPackageJson: 'tests/fixtures/package.json',
+      outputFolder: 'tests/fixtures/output',
+      additionalDependencies: ['react']
     })
 
-    test('generate file with base contents, no modules when bundle has no modules, input package.json has modules', () => {
-      vol.fromJSON({ '/package.json': nonEmptyPackageJson })
+    generate.ongenerate(bundleDetailsNoImports)
+    generate.onwrite()
 
-      generatePackageJson({
-        outputFolder: '/dist',
-        baseContents: basePackageJson
-      }).ongenerate(bundleDetailsNoImports)
+    expect(readPkg.sync('tests/fixtures/output/package.json', { normalize: false })).toEqual({
+      dependencies: {
+        react: '16.0'
+      }
+    })
+  })
 
-      expect(vol.toJSON()['/dist/package.json']).toBe(stringify(basePackageJson))
+  test('generate file with dependencies, additional dependencies', () => {
+    const generate = generatePackageJson({
+      inputPackageJson: 'tests/fixtures/package.json',
+      outputFolder: 'tests/fixtures/output',
+      additionalDependencies: ['react']
     })
 
-    test('generate file with base contents, no modules when bundle has modules, input package.json hasn\'t modules', () => {
-      vol.fromJSON({ '/package.json': emptyPackageJson })
+    generate.ongenerate(bundleDetailsWithImports)
+    generate.onwrite()
 
-      generatePackageJson({
-        outputFolder: '/dist',
-        baseContents: basePackageJson
-      }).ongenerate(bundleDetailsWithImports)
+    expect(readPkg.sync('tests/fixtures/output/package.json', { normalize: false })).toEqual({
+      dependencies: {
+        koa: '2.0',
+        react: '16.0'
+      }
+    })
+  })
 
-      expect(vol.toJSON()['/dist/package.json']).toBe(stringify(basePackageJson))
+  test('generate file with dependencies, additional dependencies and base contents', () => {
+    const basePackageJson = {
+      name: 'my-package',
+      dependencies: {},
+      private: true
+    }
+    const generate = generatePackageJson({
+      inputPackageJson: 'tests/fixtures/package.json',
+      outputFolder: 'tests/fixtures/output',
+      additionalDependencies: ['react'],
+      baseContents: basePackageJson
     })
 
-    test('generate file with base contents, modules when bundle has modules, input package.json has modules', () => {
-      vol.fromJSON({ '/package.json': nonEmptyPackageJson })
+    generate.ongenerate(bundleDetailsWithImports)
+    generate.onwrite()
 
-      generatePackageJson({
-        outputFolder: '/dist',
-        baseContents: basePackageJson
-      }).ongenerate(bundleDetailsWithImports)
-
-      const expectedPackageJson = stringify(Object.assign({}, basePackageJson, {
-        dependencies: {
-          koa: '2.0'
-        }
-      }))
-
-      expect(vol.toJSON()['/dist/package.json']).toBe(expectedPackageJson)
+    expect(readPkg.sync('tests/fixtures/output/package.json', { normalize: false })).toEqual({
+      name: 'my-package',
+      dependencies: {
+        koa: '2.0',
+        react: '16.0'
+      },
+      private: true
     })
+  })
+
+  test('generate file with no options and path from details', () => {
+    const generate = generatePackageJson()
+
+    generate.ongenerate(bundleDetailsNoImports)
+    generate.onwrite({ file: 'tests/fixtures/output/app/app.js' })
+
+    expect(readPkg.sync('tests/fixtures/output/app/package.json', { normalize: false })).toEqual({})
   })
 })
