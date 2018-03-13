@@ -37,14 +37,14 @@ describe('Input package.json file', () => {
 })
 
 describe('Generate package.json file', () => {
-  beforeEach(() => {
+  afterEach(() => {
     rimraf.sync('tests/fixtures/output')
   })
 
   test('throw if it is not possible to save generated file', () => {
     expect(() => {
       const generate = generatePackageJson({
-        outputFolder: 'tests/fixtures/non-writable'
+        outputFolder: 'tests/fixtures/folder'
       })
 
       generate.ongenerate(bundleDetailsNoImports)
