@@ -41,5 +41,8 @@
     "generate",
     "package.json"
   ],
+  "engines": {
+    "node" : ">=6"
+  },
   "license": "MIT"
 }
