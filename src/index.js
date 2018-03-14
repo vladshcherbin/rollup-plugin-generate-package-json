@@ -1,18 +1,18 @@
-import { dirname } from 'path'
+import path from 'path'
 import readPkg from 'read-pkg'
 import writePkg from 'write-pkg'
 
-function readPackageJson(path) {
+function readPackageJson(filePath) {
   try {
-    return readPkg.sync(path, { normalize: false })
+    return readPkg.sync(filePath, { normalize: false })
   } catch (e) {
     throw new Error('Input package.json file does not exist or has bad format, check "inputPackageJson" option')
   }
 }
 
-function writePackageJson(path, contents) {
+function writePackageJson(folder, contents) {
   try {
-    return writePkg.sync(path, contents)
+    return writePkg.sync(folder, contents)
   } catch (e) {
     throw new Error('Unable to save generated package.json file, check "outputFolder" option')
   }
@@ -30,7 +30,7 @@ export default function (options = {}) {
       dependencies = [...bundle.imports, ...additionalDependencies].sort()
     },
     onwrite: (details) => {
-      const outputPackageJson = options.outputFolder || dirname(details.file)
+      const outputPackageJson = options.outputFolder || path.dirname(details.file)
       const inputPackageJsonDependencies = inputPackageJson.dependencies
       const generatedDependencies = {}
 
