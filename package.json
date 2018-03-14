@@ -4,18 +4,22 @@
   "version": "1.0.0",
   "author": "Vlad Shcherbin <vlad.shcherbin@gmail.com>",
   "repository": "vladshcherbin/rollup-plugin-generate-package-json",
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "scripts": {
     "lint": "eslint src tests",
     "test": "jest",
-    "coverage": "yarn test --coverage && yarn codecov && yarn rimraf coverage",
-    "prepublishOnly": "yarn lint && yarn test"
+    "build": "babel src -d dist",
+    "clean": "rimraf dist",
+    "codecov": "yarn test --coverage && yarn codecov && yarn rimraf coverage",
+    "prepublishOnly": "yarn lint && yarn test && yarn build",
+    "postpublish": "yarn clean"
   },
   "dependencies": {
     "read-pkg": "^3.0.0",
     "write-pkg": "^3.1.0"
   },
   "devDependencies": {
+    "@babel/cli": "^7.0.0-beta.40",
     "@babel/core": "^7.0.0-beta.40",
     "@babel/preset-env": "^7.0.0-beta.40",
     "babel-core": "^7.0.0-0",
