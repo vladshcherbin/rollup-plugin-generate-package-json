@@ -10,7 +10,7 @@
     "test": "jest",
     "build": "babel src -d dist",
     "clean": "rimraf dist",
-    "codecov": "yarn test --coverage && yarn codecov && yarn rimraf coverage",
+    "coverage": "yarn test --coverage && yarn codecov && yarn rimraf coverage",
     "prepublishOnly": "yarn lint && yarn test && yarn build",
     "postpublish": "yarn clean"
   },
