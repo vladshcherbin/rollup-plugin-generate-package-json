@@ -5,7 +5,7 @@
 
 Generate `package.json` file with packages from your bundle using Rollup.
 
-## Why
+## About
 
 This plugin is useful when you have a lot of packages in your current `package.json` and want to create a lean one with only packages from your generated bundle, probably for deployment.
 
