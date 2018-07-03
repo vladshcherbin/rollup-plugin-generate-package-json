@@ -38,7 +38,7 @@
   ],
   "keywords": [
     "rollup",
-    "plugin",
+    "rollup-plugin",
     "generate",
     "package.json"
   ],
