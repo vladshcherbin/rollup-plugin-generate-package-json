@@ -14,7 +14,7 @@ function readPackageJson(folder) {
 
 function writePackageJson(folder, contents) {
   try {
-    return writePkg.sync(folder, contents)
+    return writePkg.sync(folder, contents, { indent: 2 })
   } catch (e) {
     throw new Error('Unable to save generated package.json file, check "outputFolder" option')
   }
