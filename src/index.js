@@ -2,11 +2,13 @@ import path from 'path'
 import readPkg from 'read-pkg'
 import writePkg from 'write-pkg'
 
-function readPackageJson(filePath) {
+function readPackageJson(folder) {
   try {
-    return readPkg.sync(filePath, { normalize: false })
+    const options = Object.assign({ normalize: false }, folder && { cwd: folder })
+
+    return readPkg.sync(options)
   } catch (e) {
-    throw new Error('Input package.json file does not exist or has bad format, check "inputPackageJson" option')
+    throw new Error('Input package.json file does not exist or has bad format, check "inputFolder" option')
   }
 }
 
@@ -19,28 +21,32 @@ function writePackageJson(folder, contents) {
 }
 
 export default function (options = {}) {
-  const inputPackageJson = readPackageJson(options.inputPackageJson)
+  const inputFile = readPackageJson(options.inputFolder)
   const baseContents = options.baseContents || {}
   const additionalDependencies = options.additionalDependencies || []
-  let dependencies = []
 
   return {
     name: 'generate-package-json',
-    ongenerate: ({ bundle }) => {
-      dependencies = [...bundle.imports, ...additionalDependencies].sort()
-    },
-    onwrite: (details) => {
-      const outputPackageJson = options.outputFolder || path.dirname(details.file)
-      const inputPackageJsonDependencies = inputPackageJson.dependencies
+    generateBundle: (outputOptions, bundle) => {
+      const outputFolder = options.outputFolder || path.dirname(outputOptions.file)
+      let dependencies = []
+
+      Object.values(bundle).forEach((chunk) => {
+        dependencies = [...dependencies, ...chunk.imports]
+      })
+
+      dependencies = Array.from(new Set([...dependencies, ...additionalDependencies])).sort()
+
+      const inputFileDependencies = inputFile.dependencies
       const generatedDependencies = {}
 
       dependencies.forEach((dependency) => {
-        if (inputPackageJsonDependencies && inputPackageJsonDependencies[dependency]) {
-          generatedDependencies[dependency] = inputPackageJsonDependencies[dependency]
+        if (inputFileDependencies && inputFileDependencies[dependency]) {
+          generatedDependencies[dependency] = inputFileDependencies[dependency]
         }
       })
 
-      const generatedJson = Object.assign(
+      const generatedContents = Object.assign(
         {},
         baseContents,
         Object.keys(generatedDependencies).length && {
@@ -48,7 +54,7 @@ export default function (options = {}) {
         }
       )
 
-      writePackageJson(outputPackageJson, generatedJson)
+      writePackageJson(outputFolder, generatedContents)
     }
   }
 }
