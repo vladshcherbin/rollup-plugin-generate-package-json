@@ -3,35 +3,44 @@ import readPkg from 'read-pkg'
 import generatePackageJson from '../src'
 
 const bundleDetailsNoImports = {
-  bundle: { imports: [] }
+  'app.js': { imports: [] }
 }
 
 const bundleDetailsWithImports = {
-  bundle: { imports: ['koa', 'koa-router'] }
+  'app.js': { imports: ['koa', 'koa-router'] }
+}
+
+const bundleDetailsWithImportsMultipleChunks = {
+  'part-1.js': { imports: ['koa', 'koa-router'] },
+  'part-2.js': { imports: ['koa', 'koa-router', 'react'] }
 }
 
 describe('Input package.json file', () => {
-  test('throw if packageJsonPath file does not exist', () => {
+  test('throw if does not exist', () => {
     expect(() => {
-      generatePackageJson({ inputPackageJson: 'tests/fixtures/fake-package.json' })
-    }).toThrow('Input package.json file does not exist or has bad format, check "inputPackageJson" option')
+      generatePackageJson({ inputFolder: 'tests/fixtures/fake-package' })
+    }).toThrow('Input package.json file does not exist or has bad format, check "inputFolder" option')
+
+    expect(() => {
+      generatePackageJson({ inputFolder: 'tests/fixtures/fake-package.json' })
+    }).toThrow('Input package.json file does not exist or has bad format, check "inputFolder" option')
   })
 
-  test('throw if packageJsonPath file has bad format', () => {
+  test('throw if file has bad format', () => {
     expect(() => {
-      generatePackageJson({ inputPackageJson: 'tests/fixtures/bad-package.json' })
-    }).toThrow('Input package.json file does not exist or has bad format, check "inputPackageJson" option')
+      generatePackageJson({ inputFolder: 'tests/fixtures/bad' })
+    }).toThrow('Input package.json file does not exist or has bad format, check "inputFolder" option')
   })
 
-  test('don\'t throw if packageJsonPath file exists and has normal format', () => {
+  test('don\'t throw if file exists and is empty', () => {
     expect(() => {
-      generatePackageJson({ inputPackageJson: 'tests/fixtures/empty-package.json' })
+      generatePackageJson({ inputFolder: 'tests/fixtures/empty' })
     }).not.toThrow()
   })
 
-  test('don\'t throw if packageJsonPath directory has file', () => {
+  test('don\'t throw if file exists at root path and has basic structure', () => {
     expect(() => {
-      generatePackageJson({ inputPackageJson: 'tests/fixtures' })
+      generatePackageJson()
     }).not.toThrow()
   })
 })
@@ -47,8 +56,7 @@ describe('Generate package.json file', () => {
         outputFolder: 'tests/fixtures/folder'
       })
 
-      generate.ongenerate(bundleDetailsNoImports)
-      generate.onwrite()
+      generate.generateBundle({}, bundleDetailsNoImports)
     }).toThrow('Unable to save generated package.json file, check "outputFolder" option')
   })
 
@@ -57,46 +65,42 @@ describe('Generate package.json file', () => {
       outputFolder: 'tests/fixtures/output'
     })
 
-    generate.ongenerate(bundleDetailsNoImports)
-    generate.onwrite()
+    generate.generateBundle({}, bundleDetailsNoImports)
 
-    expect(readPkg.sync('tests/fixtures/output/package.json', { normalize: false })).toEqual({})
+    expect(readPkg.sync({ cwd: 'tests/fixtures/output', normalize: false })).toEqual({})
   })
 
   test('generate file when bundle has no dependencies, input package.json has dependencies', () => {
     const generate = generatePackageJson({
-      inputPackageJson: 'tests/fixtures/package.json',
+      inputFolder: 'tests/fixtures',
       outputFolder: 'tests/fixtures/output'
     })
 
-    generate.ongenerate(bundleDetailsNoImports)
-    generate.onwrite()
+    generate.generateBundle({}, bundleDetailsNoImports)
 
-    expect(readPkg.sync('tests/fixtures/output/package.json', { normalize: false })).toEqual({})
+    expect(readPkg.sync({ cwd: 'tests/fixtures/output', normalize: false })).toEqual({})
   })
 
   test('generate file when bundle has dependencies, input package.json has no dependencies', () => {
     const generate = generatePackageJson({
-      inputPackageJson: 'tests/fixtures/empty-package.json',
+      inputFolder: 'tests/fixtures/empty',
       outputFolder: 'tests/fixtures/output'
     })
 
-    generate.ongenerate(bundleDetailsWithImports)
-    generate.onwrite()
+    generate.generateBundle({}, bundleDetailsWithImports)
 
-    expect(readPkg.sync('tests/fixtures/output/package.json', { normalize: false })).toEqual({})
+    expect(readPkg.sync({ cwd: 'tests/fixtures/output', normalize: false })).toEqual({})
   })
 
   test('generate file when bundle and input package.json have dependencies', () => {
     const generate = generatePackageJson({
-      inputPackageJson: 'tests/fixtures/package.json',
+      inputFolder: 'tests/fixtures',
       outputFolder: 'tests/fixtures/output'
     })
 
-    generate.ongenerate(bundleDetailsWithImports)
-    generate.onwrite()
+    generate.generateBundle({}, bundleDetailsWithImports)
 
-    expect(readPkg.sync('tests/fixtures/output/package.json', { normalize: false })).toEqual({
+    expect(readPkg.sync({ cwd: 'tests/fixtures/output', normalize: false })).toEqual({
       dependencies: {
         koa: '2.0'
       }
@@ -110,15 +114,14 @@ describe('Generate package.json file', () => {
       private: true
     }
     const generate = generatePackageJson({
-      inputPackageJson: 'tests/fixtures/empty-package.json',
+      inputFolder: 'tests/fixtures/empty',
       outputFolder: 'tests/fixtures/output',
       baseContents: basePackageJson
     })
 
-    generate.ongenerate(bundleDetailsWithImports)
-    generate.onwrite()
+    generate.generateBundle({}, bundleDetailsWithImports)
 
-    expect(readPkg.sync('tests/fixtures/output/package.json', { normalize: false })).toEqual({
+    expect(readPkg.sync({ cwd: 'tests/fixtures/output', normalize: false })).toEqual({
       name: 'my-package',
       private: true
     })
@@ -131,15 +134,14 @@ describe('Generate package.json file', () => {
       private: true
     }
     const generate = generatePackageJson({
-      inputPackageJson: 'tests/fixtures/package.json',
+      inputFolder: 'tests/fixtures',
       outputFolder: 'tests/fixtures/output',
       baseContents: basePackageJson
     })
 
-    generate.ongenerate(bundleDetailsWithImports)
-    generate.onwrite()
+    generate.generateBundle({}, bundleDetailsWithImports)
 
-    expect(readPkg.sync('tests/fixtures/output/package.json', { normalize: false })).toEqual({
+    expect(readPkg.sync({ cwd: 'tests/fixtures/output', normalize: false })).toEqual({
       name: 'my-package',
       dependencies: {
         koa: '2.0'
@@ -150,15 +152,14 @@ describe('Generate package.json file', () => {
 
   test('generate file with additional dependencies', () => {
     const generate = generatePackageJson({
-      inputPackageJson: 'tests/fixtures/package.json',
+      inputFolder: 'tests/fixtures',
       outputFolder: 'tests/fixtures/output',
       additionalDependencies: ['react']
     })
 
-    generate.ongenerate(bundleDetailsNoImports)
-    generate.onwrite()
+    generate.generateBundle({}, bundleDetailsNoImports)
 
-    expect(readPkg.sync('tests/fixtures/output/package.json', { normalize: false })).toEqual({
+    expect(readPkg.sync({ cwd: 'tests/fixtures/output', normalize: false })).toEqual({
       dependencies: {
         react: '16.0'
       }
@@ -167,15 +168,14 @@ describe('Generate package.json file', () => {
 
   test('generate file with dependencies, additional dependencies', () => {
     const generate = generatePackageJson({
-      inputPackageJson: 'tests/fixtures/package.json',
+      inputFolder: 'tests/fixtures',
       outputFolder: 'tests/fixtures/output',
       additionalDependencies: ['react']
     })
 
-    generate.ongenerate(bundleDetailsWithImports)
-    generate.onwrite()
+    generate.generateBundle({}, bundleDetailsWithImports)
 
-    expect(readPkg.sync('tests/fixtures/output/package.json', { normalize: false })).toEqual({
+    expect(readPkg.sync({ cwd: 'tests/fixtures/output', normalize: false })).toEqual({
       dependencies: {
         koa: '2.0',
         react: '16.0'
@@ -190,16 +190,15 @@ describe('Generate package.json file', () => {
       private: true
     }
     const generate = generatePackageJson({
-      inputPackageJson: 'tests/fixtures/package.json',
+      inputFolder: 'tests/fixtures',
       outputFolder: 'tests/fixtures/output',
       additionalDependencies: ['react'],
       baseContents: basePackageJson
     })
 
-    generate.ongenerate(bundleDetailsWithImports)
-    generate.onwrite()
+    generate.generateBundle({}, bundleDetailsWithImports)
 
-    expect(readPkg.sync('tests/fixtures/output/package.json', { normalize: false })).toEqual({
+    expect(readPkg.sync({ cwd: 'tests/fixtures/output', normalize: false })).toEqual({
       name: 'my-package',
       dependencies: {
         koa: '2.0',
@@ -209,12 +208,27 @@ describe('Generate package.json file', () => {
     })
   })
 
+  test('generate file with unique dependencies from multiple chunks', () => {
+    const generate = generatePackageJson({
+      inputFolder: 'tests/fixtures',
+      outputFolder: 'tests/fixtures/output'
+    })
+
+    generate.generateBundle({}, bundleDetailsWithImportsMultipleChunks)
+
+    expect(readPkg.sync({ cwd: 'tests/fixtures/output', normalize: false })).toEqual({
+      dependencies: {
+        koa: '2.0',
+        react: '16.0'
+      }
+    })
+  })
+
   test('generate file with no options and path from details', () => {
     const generate = generatePackageJson()
 
-    generate.ongenerate(bundleDetailsNoImports)
-    generate.onwrite({ file: 'tests/fixtures/output/app/app.js' })
+    generate.generateBundle({ file: 'tests/fixtures/output/app/app.js' }, bundleDetailsNoImports)
 
-    expect(readPkg.sync('tests/fixtures/output/app/package.json', { normalize: false })).toEqual({})
+    expect(readPkg.sync({ cwd: 'tests/fixtures/output/app', normalize: false })).toEqual({})
   })
 })
