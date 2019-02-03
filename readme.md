@@ -39,19 +39,19 @@ export default {
 
 There are some useful options, all of them are optional:
 
-**inputPackageJson**
+**inputFolder**
 
-Set input `package.json` file path, it can be a file or a directory. By default, root `package.json` file is used.
+Set input `package.json` folder. By default, current working directory is used.
 
 ```js
 generatePackageJson({
-  inputPackageJson: 'nested/folder'
+  inputFolder: 'nested/folder'
 })
 ```
 
 **outputFolder**
 
-Set output folder where generated `package.json` file will be saved. By default, it is the same folder where bundle was saved.
+Set output folder for generated `package.json` file. By default, bundle output folder is used.
 
 ```js
 generatePackageJson({
