@@ -18,30 +18,44 @@ const bundleDetailsWithImportsMultipleChunks = {
 describe('Input package.json file', () => {
   test('throw if does not exist', () => {
     expect(() => {
-      generatePackageJson({ inputFolder: 'tests/fixtures/fake-package' })
+      const generate = generatePackageJson({ inputFolder: 'tests/fixtures/fake-package' })
+
+      generate.generateBundle({}, bundleDetailsNoImports)
     }).toThrow('Input package.json file does not exist or has bad format, check "inputFolder" option')
 
     expect(() => {
-      generatePackageJson({ inputFolder: 'tests/fixtures/fake-package.json' })
+      const generate = generatePackageJson({ inputFolder: 'tests/fixtures/fake-package.json' })
+
+      generate.generateBundle({}, bundleDetailsNoImports)
     }).toThrow('Input package.json file does not exist or has bad format, check "inputFolder" option')
   })
 
   test('throw if file has bad format', () => {
     expect(() => {
-      generatePackageJson({ inputFolder: 'tests/fixtures/bad' })
+      const generate = generatePackageJson({ inputFolder: 'tests/fixtures/bad' })
+
+      generate.generateBundle({}, bundleDetailsNoImports)
     }).toThrow('Input package.json file does not exist or has bad format, check "inputFolder" option')
   })
 
   test('don\'t throw if file exists and is empty', () => {
     expect(() => {
-      generatePackageJson({ inputFolder: 'tests/fixtures/empty' })
+      const generate = generatePackageJson({ inputFolder: 'tests/fixtures/empty' })
+
+      generate.generateBundle({ dir: 'tests/fixtures/output' }, bundleDetailsNoImports)
     }).not.toThrow()
+
+    rimraf.sync('tests/fixtures/output')
   })
 
   test('don\'t throw if file exists at root path and has basic structure', () => {
     expect(() => {
-      generatePackageJson()
+      const generate = generatePackageJson()
+
+      generate.generateBundle({ dir: 'tests/fixtures/output' }, bundleDetailsNoImports)
     }).not.toThrow()
+
+    rimraf.sync('tests/fixtures/output')
   })
 })
 
