@@ -21,13 +21,13 @@ function writePackageJson(folder, contents) {
 }
 
 export default function (options = {}) {
-  const inputFile = readPackageJson(options.inputFolder)
   const baseContents = options.baseContents || {}
   const additionalDependencies = options.additionalDependencies || []
 
   return {
     name: 'generate-package-json',
     generateBundle: (outputOptions, bundle) => {
+      const inputFile = readPackageJson(options.inputFolder)
       const outputFolder = options.outputFolder
         || outputOptions.dir
         || path.dirname(outputOptions.file)
