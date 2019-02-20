@@ -28,7 +28,9 @@ export default function (options = {}) {
   return {
     name: 'generate-package-json',
     generateBundle: (outputOptions, bundle) => {
-      const outputFolder = options.outputFolder || path.dirname(outputOptions.file)
+      const outputFolder = options.outputFolder
+        || outputOptions.dir
+        || path.dirname(outputOptions.file)
       let dependencies = []
 
       Object.values(bundle).forEach((chunk) => {
