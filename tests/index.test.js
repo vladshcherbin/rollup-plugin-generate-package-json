@@ -10,6 +10,10 @@ const bundleDetailsWithImports = {
   'app.js': { imports: ['koa', 'koa-router'] }
 }
 
+const bundleDetailsWithSubpathImports = {
+  'app.js': { imports: ['koa', 'uuid/v4'] }
+}
+
 const bundleDetailsWithImportsMultipleChunks = {
   'part-1.js': { imports: ['koa', 'koa-router'] },
   'part-2.js': { imports: ['koa', 'koa-router', 'react'] }
@@ -219,6 +223,22 @@ describe('Generate package.json file', () => {
         react: '16.0'
       },
       private: true
+    })
+  })
+
+  test('generate file with subpath dependencies', () => {
+    const generate = generatePackageJson({
+      inputFolder: 'tests/fixtures/subpath',
+      outputFolder: 'tests/fixtures/output'
+    })
+
+    generate.generateBundle({}, bundleDetailsWithSubpathImports)
+
+    expect(readPkg.sync({ cwd: 'tests/fixtures/output', normalize: false })).toEqual({
+      dependencies: {
+        koa: '2.0',
+        uuid: '3.0'
+      }
     })
   })
 
