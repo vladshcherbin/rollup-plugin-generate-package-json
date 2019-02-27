@@ -20,6 +20,10 @@ function writePackageJson(folder, contents) {
   }
 }
 
+function normalizeImportModules(imports) {
+  return imports.map(module => module.split(/[/\\]/)[0])
+}
+
 export default function (options = {}) {
   const baseContents = options.baseContents || {}
   const additionalDependencies = options.additionalDependencies || []
@@ -34,7 +38,7 @@ export default function (options = {}) {
       let dependencies = []
 
       Object.values(bundle).forEach((chunk) => {
-        dependencies = [...dependencies, ...chunk.imports]
+        dependencies = [...dependencies, ...normalizeImportModules(chunk.imports)]
       })
 
       dependencies = Array.from(new Set([...dependencies, ...additionalDependencies])).sort()
