@@ -21,7 +21,13 @@ function writePackageJson(folder, contents) {
 }
 
 function normalizeImportModules(imports) {
-  return imports.map(module => module.split(/[/\\]/)[0])
+  return imports.map((module) => {
+    const pathParts = module.split(/[/\\]/)
+
+    return (pathParts[0][0] === '@')
+      ? `${pathParts[0]}/${pathParts[1]}`
+      : pathParts[0]
+  })
 }
 
 export default function (options = {}) {
