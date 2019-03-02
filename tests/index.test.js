@@ -14,6 +14,10 @@ const bundleDetailsWithSubpathImports = {
   'app.js': { imports: ['koa', 'uuid/v4'] }
 }
 
+const bundleDetailsWithScopedImports = {
+  'app.js': { imports: ['koa', 'uuid/v4', '@google-cloud/bigquery'] }
+}
+
 const bundleDetailsWithImportsMultipleChunks = {
   'part-1.js': { imports: ['koa', 'koa-router'] },
   'part-2.js': { imports: ['koa', 'koa-router', 'react'] }
@@ -236,6 +240,23 @@ describe('Generate package.json file', () => {
 
     expect(readPkg.sync({ cwd: 'tests/fixtures/output', normalize: false })).toEqual({
       dependencies: {
+        koa: '2.0',
+        uuid: '3.0'
+      }
+    })
+  })
+
+  test('generate file with scoped dependencies', () => {
+    const generate = generatePackageJson({
+      inputFolder: 'tests/fixtures/scoped',
+      outputFolder: 'tests/fixtures/output'
+    })
+
+    generate.generateBundle({}, bundleDetailsWithScopedImports)
+
+    expect(readPkg.sync({ cwd: 'tests/fixtures/output', normalize: false })).toEqual({
+      dependencies: {
+        '@google-cloud/bigquery': '2.0',
         koa: '2.0',
         uuid: '3.0'
       }
