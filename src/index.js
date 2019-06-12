@@ -1,12 +1,12 @@
 import path from 'path'
-import readPkg from 'read-pkg'
-import writePkg from 'write-pkg'
+import readPackage from 'read-pkg'
+import writePackage from 'write-pkg'
 
 function readPackageJson(folder) {
   try {
     const options = Object.assign({ normalize: false }, folder && { cwd: folder })
 
-    return readPkg.sync(options)
+    return readPackage.sync(options)
   } catch (e) {
     throw new Error('Input package.json file does not exist or has bad format, check "inputFolder" option')
   }
@@ -14,7 +14,7 @@ function readPackageJson(folder) {
 
 function writePackageJson(folder, contents) {
   try {
-    return writePkg.sync(folder, contents, { indent: 2 })
+    return writePackage.sync(folder, contents, { indent: 2 })
   } catch (e) {
     throw new Error('Unable to save generated package.json file, check "outputFolder" option')
   }
