@@ -2,19 +2,19 @@ import path from 'path'
 import readPackage from 'read-pkg'
 import writePackage from 'write-pkg'
 
-function readPackageJson(folder) {
+async function readPackageJson(folder) {
   try {
     const options = Object.assign({ normalize: false }, folder && { cwd: folder })
 
-    return readPackage.sync(options)
+    return await readPackage(options)
   } catch (e) {
     throw new Error('Input package.json file does not exist or has bad format, check "inputFolder" option')
   }
 }
 
-function writePackageJson(folder, contents) {
+async function writePackageJson(folder, contents) {
   try {
-    return writePackage.sync(folder, contents, { indent: 2 })
+    return await writePackage(folder, contents, { indent: 2 })
   } catch (e) {
     throw new Error('Unable to save generated package.json file, check "outputFolder" option')
   }
@@ -30,15 +30,19 @@ function normalizeImportModules(imports) {
   })
 }
 
-export default function (options = {}) {
-  const baseContents = options.baseContents || {}
-  const additionalDependencies = options.additionalDependencies || []
+export default function generatePackageJson(options = {}) {
+  const {
+    additionalDependencies = [],
+    baseContents = {},
+    inputFolder,
+    outputFolder
+  } = options
 
   return {
     name: 'generate-package-json',
-    generateBundle: (outputOptions, bundle) => {
-      const inputFile = readPackageJson(options.inputFolder)
-      const outputFolder = options.outputFolder
+    generateBundle: async (outputOptions, bundle) => {
+      const inputFile = await readPackageJson(inputFolder)
+      const outputPath = outputFolder
         || outputOptions.dir
         || path.dirname(outputOptions.file)
       let dependencies = []
@@ -66,7 +70,7 @@ export default function (options = {}) {
         }
       )
 
-      writePackageJson(outputFolder, generatedContents)
+      await writePackageJson(outputPath, generatedContents)
     }
   }
 }
