@@ -1,169 +1,112 @@
-import rimraf from 'rimraf'
+import path from 'path'
+import fs from 'fs-extra'
+import { rollup } from 'rollup'
 import readPkg from 'read-pkg'
 import generatePackageJson from '../src'
 
-const bundleDetailsNoImports = {
-  'app.js': { imports: [] }
-}
+process.chdir(`${__dirname}/fixtures`)
 
-const bundleDetailsWithImports = {
-  'app.js': { imports: ['koa', 'koa-router'] }
-}
-
-const bundleDetailsWithSubpathImports = {
-  'app.js': { imports: ['koa', 'uuid/v4'] }
-}
-
-const bundleDetailsWithScopedImports = {
-  'app.js': { imports: ['koa', 'uuid/v4', '@google-cloud/bigquery'] }
-}
-
-const bundleDetailsWithImportsMultipleChunks = {
-  'part-1.js': { imports: ['koa', 'koa-router'] },
-  'part-2.js': { imports: ['koa', 'koa-router', 'react'] }
-}
-
-describe('Input package.json file', () => {
-  test('throw if does not exist', () => {
-    expect(() => {
-      const generate = generatePackageJson({ inputFolder: 'tests/fixtures/fake-package' })
-
-      generate.generateBundle({}, bundleDetailsNoImports)
-    }).toThrow('Input package.json file does not exist or has bad format, check "inputFolder" option')
-
-    expect(() => {
-      const generate = generatePackageJson({ inputFolder: 'tests/fixtures/fake-package.json' })
-
-      generate.generateBundle({}, bundleDetailsNoImports)
-    }).toThrow('Input package.json file does not exist or has bad format, check "inputFolder" option')
+async function build(options = {}) {
+  const bundle = await rollup({
+    input: `${options.inputFolder || 'src/dependencies'}/index.js`,
+    plugins: [
+      generatePackageJson(options)
+    ],
+    external: ['@google-cloud/bigquery', 'koa', 'uuid/v4']
   })
 
-  test('throw if file has bad format', () => {
-    expect(() => {
-      const generate = generatePackageJson({ inputFolder: 'tests/fixtures/bad' })
+  await bundle.write({
+    file: 'dist/app.js',
+    format: 'cjs'
+  })
+}
 
-      generate.generateBundle({}, bundleDetailsNoImports)
-    }).toThrow('Input package.json file does not exist or has bad format, check "inputFolder" option')
+function readDistPackageJson() {
+  return readPkg({ cwd: 'dist', normalize: false })
+}
+
+afterEach(async () => {
+  await fs.remove('dist')
+})
+
+describe('Input package.json', () => {
+  test('throw if doesn\'t exist', async () => {
+    await expect(build({ inputFolder: 'src/input-file-absent' }))
+      .rejects.toThrow('Input package.json file does not exist or has bad format, check "inputFolder" option')
   })
 
-  test('don\'t throw if file exists and is empty', () => {
-    expect(() => {
-      const generate = generatePackageJson({ inputFolder: 'tests/fixtures/empty' })
-
-      generate.generateBundle({ dir: 'tests/fixtures/output' }, bundleDetailsNoImports)
-    }).not.toThrow()
-
-    rimraf.sync('tests/fixtures/output')
-  })
-
-  test('don\'t throw if file exists at root path and has basic structure', () => {
-    expect(() => {
-      const generate = generatePackageJson()
-
-      generate.generateBundle({ dir: 'tests/fixtures/output' }, bundleDetailsNoImports)
-    }).not.toThrow()
-
-    rimraf.sync('tests/fixtures/output')
+  test('throw if has bad format', async () => {
+    await expect(build({ inputFolder: 'src/input-file-bad-format' }))
+      .rejects.toThrow('Input package.json file does not exist or has bad format, check "inputFolder" option')
   })
 })
 
 describe('Generate package.json file', () => {
-  afterEach(() => {
-    rimraf.sync('tests/fixtures/output')
+  test('throw if not possible to save generated file', async () => {
+    await expect(build({
+      inputFolder: 'src/output-bad-format',
+      outputFolder: 'src/output-bad-format/folder'
+    })).rejects.toThrow('Unable to save generated package.json file, check "outputFolder" option')
   })
 
-  test('throw if it is not possible to save generated file', () => {
-    expect(() => {
-      const generate = generatePackageJson({
-        outputFolder: 'tests/fixtures/folder'
-      })
+  test('no options', async () => {
+    process.chdir(`${__dirname}/fixtures/src/dependencies`)
 
-      generate.generateBundle({}, bundleDetailsNoImports)
-    }).toThrow('Unable to save generated package.json file, check "outputFolder" option')
-  })
-
-  test('generate file when bundle and input package.json have no dependencies', () => {
-    const generate = generatePackageJson({
-      outputFolder: 'tests/fixtures/output'
+    const bundle = await rollup({
+      input: 'index.js',
+      plugins: [
+        generatePackageJson()
+      ],
+      external: ['koa']
     })
 
-    generate.generateBundle({}, bundleDetailsNoImports)
-
-    expect(readPkg.sync({ cwd: 'tests/fixtures/output', normalize: false })).toEqual({})
-  })
-
-  test('generate file when bundle has no dependencies, input package.json has dependencies', () => {
-    const generate = generatePackageJson({
-      inputFolder: 'tests/fixtures',
-      outputFolder: 'tests/fixtures/output'
+    await bundle.write({
+      file: path.resolve(process.cwd(), '../../dist/app.js'),
+      format: 'cjs'
     })
 
-    generate.generateBundle({}, bundleDetailsNoImports)
+    process.chdir(`${__dirname}/fixtures`)
 
-    expect(readPkg.sync({ cwd: 'tests/fixtures/output', normalize: false })).toEqual({})
-  })
-
-  test('generate file when bundle has dependencies, input package.json has no dependencies', () => {
-    const generate = generatePackageJson({
-      inputFolder: 'tests/fixtures/empty',
-      outputFolder: 'tests/fixtures/output'
-    })
-
-    generate.generateBundle({}, bundleDetailsWithImports)
-
-    expect(readPkg.sync({ cwd: 'tests/fixtures/output', normalize: false })).toEqual({})
-  })
-
-  test('generate file when bundle and input package.json have dependencies', () => {
-    const generate = generatePackageJson({
-      inputFolder: 'tests/fixtures',
-      outputFolder: 'tests/fixtures/output'
-    })
-
-    generate.generateBundle({}, bundleDetailsWithImports)
-
-    expect(readPkg.sync({ cwd: 'tests/fixtures/output', normalize: false })).toEqual({
+    await expect(readDistPackageJson()).resolves.toEqual({
       dependencies: {
         koa: '2.0'
       }
     })
   })
 
-  test('generate file with base contents', () => {
-    const basePackageJson = {
-      name: 'my-package',
-      dependencies: {},
-      private: true
-    }
-    const generate = generatePackageJson({
-      inputFolder: 'tests/fixtures/empty',
-      outputFolder: 'tests/fixtures/output',
-      baseContents: basePackageJson
-    })
+  test('no dependencies', async () => {
+    await build({ inputFolder: 'src/no-dependencies' })
 
-    generate.generateBundle({}, bundleDetailsWithImports)
+    await expect(readDistPackageJson()).resolves.toEqual({})
+  })
 
-    expect(readPkg.sync({ cwd: 'tests/fixtures/output', normalize: false })).toEqual({
-      name: 'my-package',
-      private: true
+  test('missing dependencies', async () => {
+    await build({ inputFolder: 'src/missing-dependencies' })
+
+    await expect(readDistPackageJson()).resolves.toEqual({})
+  })
+
+  test('dependencies', async () => {
+    await build({ inputFolder: 'src/dependencies' })
+
+    await expect(readDistPackageJson()).resolves.toEqual({
+      dependencies: {
+        koa: '2.0'
+      }
     })
   })
 
-  test('generate file with base contents and dependencies', () => {
-    const basePackageJson = {
-      name: 'my-package',
-      dependencies: {},
-      private: true
-    }
-    const generate = generatePackageJson({
-      inputFolder: 'tests/fixtures',
-      outputFolder: 'tests/fixtures/output',
-      baseContents: basePackageJson
+  test('base contents', async () => {
+    await build({
+      inputFolder: 'src/dependencies',
+      baseContents: {
+        name: 'my-package',
+        dependencies: {},
+        private: true
+      }
     })
 
-    generate.generateBundle({}, bundleDetailsWithImports)
-
-    expect(readPkg.sync({ cwd: 'tests/fixtures/output', normalize: false })).toEqual({
+    await expect(readDistPackageJson()).resolves.toEqual({
       name: 'my-package',
       dependencies: {
         koa: '2.0'
@@ -172,118 +115,61 @@ describe('Generate package.json file', () => {
     })
   })
 
-  test('generate file with additional dependencies', () => {
-    const generate = generatePackageJson({
-      inputFolder: 'tests/fixtures',
-      outputFolder: 'tests/fixtures/output',
-      additionalDependencies: ['react']
+  test('additional dependencies', async () => {
+    await build({
+      inputFolder: 'src/additional-dependencies',
+      additionalDependencies: ['koa-router']
     })
 
-    generate.generateBundle({}, bundleDetailsNoImports)
-
-    expect(readPkg.sync({ cwd: 'tests/fixtures/output', normalize: false })).toEqual({
+    await expect(readDistPackageJson()).resolves.toEqual({
       dependencies: {
-        react: '16.0'
+        koa: '2.0',
+        'koa-router': '7.4'
       }
     })
   })
 
-  test('generate file with dependencies, additional dependencies', () => {
-    const generate = generatePackageJson({
-      inputFolder: 'tests/fixtures',
-      outputFolder: 'tests/fixtures/output',
-      additionalDependencies: ['react']
-    })
+  test('subpath dependencies', async () => {
+    await build({ inputFolder: 'src/subpath-dependencies' })
 
-    generate.generateBundle({}, bundleDetailsWithImports)
-
-    expect(readPkg.sync({ cwd: 'tests/fixtures/output', normalize: false })).toEqual({
+    await expect(readDistPackageJson()).resolves.toEqual({
       dependencies: {
-        koa: '2.0',
-        react: '16.0'
+        uuid: '3.3'
       }
     })
   })
 
-  test('generate file with dependencies, additional dependencies and base contents', () => {
-    const basePackageJson = {
-      name: 'my-package',
-      dependencies: {},
-      private: true
-    }
-    const generate = generatePackageJson({
-      inputFolder: 'tests/fixtures',
-      outputFolder: 'tests/fixtures/output',
-      additionalDependencies: ['react'],
-      baseContents: basePackageJson
-    })
+  test('scoped dependencies', async () => {
+    await build({ inputFolder: 'src/scoped-dependencies' })
 
-    generate.generateBundle({}, bundleDetailsWithImports)
-
-    expect(readPkg.sync({ cwd: 'tests/fixtures/output', normalize: false })).toEqual({
-      name: 'my-package',
+    await expect(readDistPackageJson()).resolves.toEqual({
       dependencies: {
-        koa: '2.0',
-        react: '16.0'
-      },
-      private: true
-    })
-  })
-
-  test('generate file with subpath dependencies', () => {
-    const generate = generatePackageJson({
-      inputFolder: 'tests/fixtures/subpath',
-      outputFolder: 'tests/fixtures/output'
-    })
-
-    generate.generateBundle({}, bundleDetailsWithSubpathImports)
-
-    expect(readPkg.sync({ cwd: 'tests/fixtures/output', normalize: false })).toEqual({
-      dependencies: {
-        koa: '2.0',
-        uuid: '3.0'
+        '@google-cloud/bigquery': '4.4'
       }
     })
   })
 
-  test('generate file with scoped dependencies', () => {
-    const generate = generatePackageJson({
-      inputFolder: 'tests/fixtures/scoped',
-      outputFolder: 'tests/fixtures/output'
+  test('unique dependencies from multiple chunks', async () => {
+    const bundle = await rollup({
+      input: [
+        'src/unique-dependencies/app-1.js',
+        'src/unique-dependencies/app-2.js'
+      ],
+      plugins: [
+        generatePackageJson({ inputFolder: 'src/unique-dependencies' })
+      ],
+      external: ['koa']
     })
 
-    generate.generateBundle({}, bundleDetailsWithScopedImports)
+    await bundle.write({
+      dir: 'dist',
+      format: 'cjs'
+    })
 
-    expect(readPkg.sync({ cwd: 'tests/fixtures/output', normalize: false })).toEqual({
+    await expect(readDistPackageJson()).resolves.toEqual({
       dependencies: {
-        '@google-cloud/bigquery': '2.0',
-        koa: '2.0',
-        uuid: '3.0'
+        koa: '2.0'
       }
     })
-  })
-
-  test('generate file with unique dependencies from multiple chunks', () => {
-    const generate = generatePackageJson({
-      inputFolder: 'tests/fixtures',
-      outputFolder: 'tests/fixtures/output'
-    })
-
-    generate.generateBundle({}, bundleDetailsWithImportsMultipleChunks)
-
-    expect(readPkg.sync({ cwd: 'tests/fixtures/output', normalize: false })).toEqual({
-      dependencies: {
-        koa: '2.0',
-        react: '16.0'
-      }
-    })
-  })
-
-  test('generate file with no options and path from details', () => {
-    const generate = generatePackageJson()
-
-    generate.generateBundle({ file: 'tests/fixtures/output/app/app.js' }, bundleDetailsNoImports)
-
-    expect(readPkg.sync({ cwd: 'tests/fixtures/output/app', normalize: false })).toEqual({})
   })
 })

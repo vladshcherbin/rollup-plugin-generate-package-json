@@ -25,6 +25,7 @@
     "eslint": "^5.16.0",
     "eslint-config-airbnb-base": "^13.1.0",
     "eslint-plugin-import": "^2.17.3",
+    "fs-extra": "^8.1.0",
     "jest": "^24.8.0",
     "rimraf": "^2.6.3",
     "rollup": "^1.15.1",
