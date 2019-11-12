@@ -45,7 +45,7 @@ export default function (options = {}) {
 
       Object.values(bundle).forEach((chunk) => {
         if (chunk.imports) {
-          dependencies = [...dependencies, ...normalizeImportModules(chunk.imports)] 
+          dependencies = [...dependencies, ...normalizeImportModules(chunk.imports)]
         }
       })
 
