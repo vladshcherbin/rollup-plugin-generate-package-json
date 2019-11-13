@@ -48,7 +48,9 @@ export default function generatePackageJson(options = {}) {
       let dependencies = []
 
       Object.values(bundle).forEach((chunk) => {
-        dependencies = [...dependencies, ...normalizeImportModules(chunk.imports)]
+        if (chunk.imports) {
+          dependencies = [...dependencies, ...normalizeImportModules(chunk.imports)]
+        }
       })
 
       dependencies = Array.from(new Set([...dependencies, ...additionalDependencies])).sort()
