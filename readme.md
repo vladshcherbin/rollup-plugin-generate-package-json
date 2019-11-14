@@ -7,7 +7,7 @@ Generate `package.json` file with packages from your bundle using Rollup.
 
 ## About
 
-This plugin is useful when you have a lot of packages in your current `package.json` and want to create a lean one with only packages from your generated bundle, probably for deployment.
+This plugin is useful when you have a lot of packages in your current `package.json` file and want to create a lean one with only packages from your generated bundle, probably for deployment.
 
 ## Installation
 
@@ -43,7 +43,7 @@ There are some useful options, all of them are optional:
 
 #### inputFolder
 
-Type: `string`
+Type: `string`\
 Default: current working directory
 
 Set input `package.json` folder.
@@ -56,7 +56,7 @@ generatePackageJson({
 
 #### outputFolder
 
-Type: `string`
+Type: `string`\
 Default: bundle output folder
 
 Set output folder for generated `package.json` file.
@@ -69,7 +69,7 @@ generatePackageJson({
 
 #### baseContents
 
-Type: `object | function`
+Type: `object | function`\
 Default: `{}`
 
 Set base contents for your generated `package.json` file.
@@ -101,7 +101,7 @@ generatePackageJson({
 
 #### additionalDependencies
 
-Type: `Array | object`
+Type: `Array | object`\
 Default: `[]`
 
 Set dependencies which are not directly imported in the bundle, but are used by the app.
