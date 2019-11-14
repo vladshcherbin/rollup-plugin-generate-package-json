@@ -172,4 +172,34 @@ describe('Generate package.json file', () => {
       }
     })
   })
+
+  test('assets mixed with chunks', async () => {
+    function addAsset() {
+      return {
+        name: 'add-asset',
+        load() {
+          this.emitFile({
+            type: 'asset',
+            source: 'console.log(\'hey\')',
+            name: 'asset.js'
+          })
+        }
+      }
+    }
+
+    const bundle = await rollup({
+      input: 'src/assets/index.js',
+      plugins: [
+        addAsset(),
+        generatePackageJson({ inputFolder: 'src/assets' })
+      ]
+    })
+
+    await bundle.write({
+      dir: 'dist',
+      format: 'cjs'
+    })
+
+    await expect(readDistPackageJson()).resolves.toEqual({})
+  })
 })
