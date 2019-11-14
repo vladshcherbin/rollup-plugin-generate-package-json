@@ -110,7 +110,7 @@ test('base contents', async () => {
 test('base contents as function', async () => {
   await build({
     inputFolder: 'src/base-contents-function',
-    baseContents: pkg => ({
+    baseContents: (pkg) => ({
       name: pkg.name,
       main: pkg.main.replace('src', 'dist'),
       dependencies: {},
