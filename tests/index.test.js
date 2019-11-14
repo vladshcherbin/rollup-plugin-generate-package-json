@@ -115,6 +115,27 @@ describe('Generate package.json file', () => {
     })
   })
 
+  test('base contents as function', async () => {
+    await build({
+      inputFolder: 'src/base-contents-function',
+      baseContents: pkg => ({
+        name: pkg.name,
+        main: pkg.main.replace('src', 'dist'),
+        dependencies: {},
+        private: true
+      })
+    })
+
+    await expect(readDistPackageJson()).resolves.toEqual({
+      name: 'test',
+      main: 'dist/index.js',
+      dependencies: {
+        koa: '2.0'
+      },
+      private: true
+    })
+  })
+
   test('additional dependencies', async () => {
     await build({
       inputFolder: 'src/additional-dependencies',

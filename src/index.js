@@ -66,7 +66,7 @@ export default function generatePackageJson(options = {}) {
 
       const generatedContents = Object.assign(
         {},
-        baseContents,
+        typeof baseContents === 'function' ? baseContents(inputFile) : baseContents,
         Object.keys(generatedDependencies).length && {
           dependencies: generatedDependencies
         }
