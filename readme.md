@@ -44,7 +44,7 @@ There are some useful options, all of them are optional:
 #### inputFolder
 
 Type: `string`\
-Default: current working directory
+Default: `current working directory`
 
 Set input `package.json` folder.
 
@@ -57,7 +57,7 @@ generatePackageJson({
 #### outputFolder
 
 Type: `string`\
-Default: bundle output folder
+Default: `bundle output folder`
 
 Set output folder for generated `package.json` file.
 
