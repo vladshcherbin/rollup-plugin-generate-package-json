@@ -4,9 +4,7 @@ import writePackage from 'write-pkg'
 
 async function readPackageJson(folder) {
   try {
-    const options = Object.assign({ normalize: false }, folder && { cwd: folder })
-
-    return await readPackage(options)
+    return await readPackage({ normalize: false, ...(folder && { cwd: folder }) })
   } catch (e) {
     throw new Error('Input package.json file does not exist or has bad format, check "inputFolder" option')
   }
@@ -75,13 +73,10 @@ export default function generatePackageJson(options = {}) {
         }
       })
 
-      const generatedContents = Object.assign(
-        {},
-        typeof baseContents === 'function' ? baseContents(inputFile) : baseContents,
-        Object.keys(generatedDependencies).length && {
-          dependencies: generatedDependencies
-        }
-      )
+      const generatedContents = {
+        ...(typeof baseContents === 'function' ? baseContents(inputFile) : baseContents),
+        ...(Object.keys(generatedDependencies).length && { dependencies: generatedDependencies })
+      }
 
       await writePackageJson(outputPath, generatedContents)
     }
