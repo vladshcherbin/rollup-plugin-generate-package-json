@@ -170,6 +170,23 @@ describe('Generate package.json file', () => {
     })
   })
 
+  test('local dependencies', async () => {
+    await build({
+      inputFolder: 'src/local-dependencies',
+      additionalDependencies: {
+        koa: '2.11.0',
+        'react-calendar': 'file:../react-calendar/react-calendar-v2.13.2.tgz'
+      }
+    })
+
+    await expect(readDistPackageJson()).resolves.toEqual({
+      dependencies: {
+        koa: '2.11.0',
+        'react-calendar': 'file:../react-calendar/react-calendar-v2.13.2.tgz'
+      }
+    })
+  })
+
   test('unique dependencies from multiple chunks', async () => {
     const bundle = await rollup({
       input: [

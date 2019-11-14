@@ -90,11 +90,22 @@ generatePackageJson({
 
 **additionalDependencies**
 
-Set additional dependencies which were not used in the bundle, but are used by the app.
+Set dependencies which are not directly imported, but are used by the app.
 
 ```js
 generatePackageJson({
   additionalDependencies: ['pg']
+})
+```
+
+It's also possible to add new dependencies or overwrite dependency version.
+
+```js
+generatePackageJson({
+  additionalDependencies: {
+    pg: '7.12.1',
+    'react-calendar': 'file:../react-calendar/react-calendar-v2.13.2.tgz'
+  }
 })
 ```
 
