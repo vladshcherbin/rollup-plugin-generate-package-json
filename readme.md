@@ -12,9 +12,11 @@ This plugin is useful when you have a lot of packages in your current `package.j
 ## Installation
 
 ```bash
-npm install rollup-plugin-generate-package-json --save-dev
-# or
+# yarn
 yarn add rollup-plugin-generate-package-json -D
+
+# npm
+npm install rollup-plugin-generate-package-json -D
 ```
 
 ## Usage
@@ -35,13 +37,16 @@ export default {
 }
 ```
 
-### Options
+### Configuration
 
 There are some useful options, all of them are optional:
 
-**inputFolder**
+#### inputFolder
 
-Set input `package.json` folder. By default, current working directory is used.
+Type: `string`
+Default: current working directory
+
+Set input `package.json` folder.
 
 ```js
 generatePackageJson({
@@ -49,9 +54,12 @@ generatePackageJson({
 })
 ```
 
-**outputFolder**
+#### outputFolder
 
-Set output folder for generated `package.json` file. By default, bundle output folder is used.
+Type: `string`
+Default: bundle output folder
+
+Set output folder for generated `package.json` file.
 
 ```js
 generatePackageJson({
@@ -59,7 +67,10 @@ generatePackageJson({
 })
 ```
 
-**baseContents**
+#### baseContents
+
+Type: `object | function`
+Default: `{}`
 
 Set base contents for your generated `package.json` file.
 
@@ -79,7 +90,7 @@ It can also be a function, which receives the contents of the input `package.jso
 
 ```js
 generatePackageJson({
-  baseContents: pkg => ({
+  baseContents: (pkg) => ({
     name: pkg.name,
     main: pkg.main.replace('src', 'dist')
     dependencies: {},
@@ -88,9 +99,12 @@ generatePackageJson({
 })
 ```
 
-**additionalDependencies**
+#### additionalDependencies
 
-Set dependencies which are not directly imported, but are used by the app.
+Type: `Array | object`
+Default: `[]`
+
+Set dependencies which are not directly imported in the bundle, but are used by the app.
 
 ```js
 generatePackageJson({
