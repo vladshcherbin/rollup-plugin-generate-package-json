@@ -53,7 +53,14 @@ export default function generatePackageJson(options = {}) {
         }
       })
 
-      dependencies = Array.from(new Set([...dependencies, ...additionalDependencies])).sort()
+      dependencies = Array.from(
+        new Set([
+          ...dependencies,
+          ...(Array.isArray(additionalDependencies)
+            ? additionalDependencies
+            : Object.keys(additionalDependencies))
+        ])
+      ).sort()
 
       const inputFileDependencies = inputFile.dependencies
       const generatedDependencies = {}
@@ -61,6 +68,10 @@ export default function generatePackageJson(options = {}) {
       dependencies.forEach((dependency) => {
         if (inputFileDependencies && inputFileDependencies[dependency]) {
           generatedDependencies[dependency] = inputFileDependencies[dependency]
+        }
+
+        if (!Array.isArray(additionalDependencies) && additionalDependencies[dependency]) {
+          generatedDependencies[dependency] = additionalDependencies[dependency]
         }
       })
 
