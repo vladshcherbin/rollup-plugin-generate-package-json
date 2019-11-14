@@ -1,8 +1,8 @@
 module.exports = {
   modulePathIgnorePatterns: [
-    '<rootDir>/tests/fixtures/bad/package.json'
+    '<rootDir>/tests/fixtures/src/input-file-bad-format/package.json'
   ],
   watchPathIgnorePatterns: [
-    '<rootDir>/tests/fixtures/output'
+    '<rootDir>/tests/fixtures/dist'
   ]
 }

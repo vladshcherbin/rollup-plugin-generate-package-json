@@ -1,0 +1,7 @@
+{
+  "name": "test",
+  "main": "src/index.js",
+  "dependencies": {
+    "koa": "2.0"
+  }
+}
